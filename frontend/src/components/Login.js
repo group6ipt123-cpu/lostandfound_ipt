@@ -11,6 +11,12 @@ const Login = () => {
     const [loading, setLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
 
+    // Email validation function
+    const validateEmail = (email) => {
+        const neuEmailRegex = /^[a-zA-Z0-9._%+-]+@neu\.edu\.ph$/;
+        return neuEmailRegex.test(email);
+    };
+
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
         setError('');
@@ -18,8 +24,15 @@ const Login = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        
         if (!formData.email || !formData.password) {
             setError('Please fill in all fields');
+            return;
+        }
+
+        // Validate email domain
+        if (!validateEmail(formData.email)) {
+            setError('Please use your @neu.edu.ph email address');
             return;
         }
 
@@ -58,20 +71,21 @@ const Login = () => {
 
                     <form onSubmit={handleSubmit} className="auth-form">
                         <div className="form-group">
-                            <label htmlFor="email">Email Address</label>
+                            <label htmlFor="email">Email Address (@neu.edu.ph)</label>
                             <div className="input-wrapper">
                                 <span className="input-icon mail-icon"></span>
                                 <input
                                     id="email"
                                     type="email"
                                     name="email"
-                                    placeholder="Enter your email"
+                                    placeholder="yourname@neu.edu.ph"
                                     value={formData.email}
                                     onChange={handleChange}
                                     autoComplete="email"
                                     required
                                 />
                             </div>
+                            <small className="field-note">Must use @neu.edu.ph email address</small>
                         </div>
 
                         <div className="form-group">
