@@ -20,6 +20,61 @@ const createNotification = async (userId, type, title, message, relatedItemId, r
     return { ...notification, _id: result.insertedId };
 };
 
+/**
+ * @swagger
+ * /api/chat/room:
+ *   post:
+ *     tags: [Chat]
+ *     summary: Create or get a chat room
+ *     description: Create a new chat room between two users for a specific item, or retrieve existing one. Requires authentication.
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - itemId
+ *               - ownerId
+ *             properties:
+ *               itemId:
+ *                 type: string
+ *                 description: ID of the item being discussed
+ *               ownerId:
+ *                 type: string
+ *                 description: ID of the other user to chat with
+ *     responses:
+ *       200:
+ *         description: Chat room created/retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     _id:
+ *                       type: string
+ *                     itemId:
+ *                       type: string
+ *                     participants:
+ *                       type: array
+ *                       items:
+ *                         type: string
+ *                     item:
+ *                       $ref: '#/components/schemas/Item'
+ *                     otherUser:
+ *                       $ref: '#/components/schemas/User'
+ *                     messages:
+ *                       type: array
+ *                       items:
+ *                         $ref: '#/components/schemas/Message'
+ */
 // Create or get chat room
 router.post('/room', auth, async (req, res) => {
     try {
@@ -38,6 +93,48 @@ router.post('/room', auth, async (req, res) => {
     } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 });
 
+/**
+ * @swagger
+ * /api/chat/rooms:
+ *   get:
+ *     tags: [Chat]
+ *     summary: Get all chat rooms for the current user
+ *     description: Retrieve all chat rooms where the user is a participant, sorted by last message time. Requires authentication.
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Chat rooms retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       _id:
+ *                         type: string
+ *                       itemId:
+ *                         type: string
+ *                       participants:
+ *                         type: array
+ *                         items:
+ *                           type: string
+ *                       item:
+ *                         $ref: '#/components/schemas/Item'
+ *                       otherUser:
+ *                         $ref: '#/components/schemas/User'
+ *                       lastMessage:
+ *                         type: string
+ *                       lastMessageTime:
+ *                         type: string
+ *                         format: date-time
+ */
 // Get all chat rooms for user
 router.get('/rooms', auth, async (req, res) => {
     try {
@@ -53,6 +150,43 @@ router.get('/rooms', auth, async (req, res) => {
     } catch (err) { res.json({ success: false, message: err.message }); }
 });
 
+/**
+ * @swagger
+ * /api/chat/messages/{roomId}:
+ *   get:
+ *     tags: [Chat]
+ *     summary: Get messages from a chat room
+ *     description: Retrieve all messages from a specific chat room. User must be a participant. Requires authentication.
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: roomId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Chat room ID
+ *     responses:
+ *       200:
+ *         description: Messages retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Message'
+ *       403:
+ *         description: Access denied (not a participant)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
 // Get messages for a room
 router.get('/messages/:roomId', auth, async (req, res) => {
     try {
@@ -63,6 +197,57 @@ router.get('/messages/:roomId', auth, async (req, res) => {
     } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 });
 
+/**
+ * @swagger
+ * /api/chat/message:
+ *   post:
+ *     tags: [Chat]
+ *     summary: Send a message in a chat room
+ *     description: Send a new message to a chat room. User must be a participant. Requires authentication.
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - roomId
+ *               - message
+ *             properties:
+ *               roomId:
+ *                 type: string
+ *                 description: Chat room ID
+ *               message:
+ *                 type: string
+ *                 description: Message content
+ *                 example: "Is this item still available?"
+ *     responses:
+ *       200:
+ *         description: Message sent successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   $ref: '#/components/schemas/Message'
+ *       400:
+ *         description: Message is empty
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       403:
+ *         description: Access denied (not a participant)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
 // Send message
 router.post('/message', auth, async (req, res) => {
     try {
@@ -90,6 +275,33 @@ router.post('/message', auth, async (req, res) => {
     } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 });
 
+/**
+ * @swagger
+ * /api/chat/messages/read/{roomId}:
+ *   put:
+ *     tags: [Chat]
+ *     summary: Mark all messages in a room as read
+ *     description: Mark all unread messages from other participants as read. Requires authentication.
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: roomId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Chat room ID
+ *     responses:
+ *       200:
+ *         description: Messages marked as read successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ */
 // Mark messages as read
 router.put('/messages/read/:roomId', auth, async (req, res) => {
     try {

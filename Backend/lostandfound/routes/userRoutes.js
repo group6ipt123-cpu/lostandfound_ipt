@@ -14,6 +14,51 @@ const auth = (req, res, next) => {
     }
 };
 
+/**
+ * @swagger
+ * /api/users/profile:
+ *   get:
+ *     tags: [Users]
+ *     summary: Get user profile
+ *     description: Retrieve the authenticated user's profile information including stats. Requires authentication.
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: User profile retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     _id:
+ *                       type: string
+ *                     name:
+ *                       type: string
+ *                     email:
+ *                       type: string
+ *                     role:
+ *                       type: string
+ *                     studentId:
+ *                       type: string
+ *                     contactNumber:
+ *                       type: string
+ *                     stats:
+ *                       type: object
+ *                       properties:
+ *                         itemsReported:
+ *                           type: integer
+ *                         itemsClaimed:
+ *                           type: integer
+ *                     createdAt:
+ *                       type: string
+ *                       format: date-time
+ */
 router.get('/profile', auth, async (req, res) => {
     try {
         const user = await mongoose.connection.db.collection('users').findOne({ _id: new mongoose.Types.ObjectId(req.user.id) }, { projection: { password: 0 } });
@@ -23,6 +68,50 @@ router.get('/profile', auth, async (req, res) => {
     } catch (err) { res.json({ success: false, message: err.message }); }
 });
 
+/**
+ * @swagger
+ * /api/users/profile:
+ *   put:
+ *     tags: [Users]
+ *     summary: Update user profile
+ *     description: Update the authenticated user's profile information. Requires authentication.
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 example: "Juan Dela Cruz"
+ *               studentId:
+ *                 type: string
+ *                 example: "22-12975-964"
+ *               contactNumber:
+ *                 type: string
+ *                 example: "09123456789"
+ *     responses:
+ *       200:
+ *         description: Profile updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   $ref: '#/components/schemas/User'
+ *       400:
+ *         description: Invalid input
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
 router.put('/profile', auth, async (req, res) => {
     try {
         const { name, studentId, contactNumber } = req.body;

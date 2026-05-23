@@ -5,9 +5,72 @@ const Item = require('../models/Item');
 const Notification = require('../models/Notification');
 const { protect, authorize } = require('../middleware/auth');
 
-// @route   POST /api/claims/:itemId
-// @desc    File a claim for an item
-// @access  Private (User only)
+/**
+ * @swagger
+ * /api/claims/{itemId}:
+ *   post:
+ *     tags: [Claims]
+ *     summary: File a claim for an item
+ *     description: User files a claim to request ownership of a found item or confirm ownership of a lost item. Requires authentication.
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: itemId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Item ID to claim
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - proofDescription
+ *             properties:
+ *               proofDescription:
+ *                 type: string
+ *                 description: Description of proof of ownership
+ *                 example: "Item has my initials inside and unique scratch on the case"
+ *     responses:
+ *       201:
+ *         description: Claim filed successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     _id:
+ *                       type: string
+ *                     item:
+ *                       type: string
+ *                     claimedBy:
+ *                       type: string
+ *                     proofDescription:
+ *                       type: string
+ *                     createdAt:
+ *                       type: string
+ *                       format: date-time
+ *       400:
+ *         description: Item not available or user already filed claim
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       404:
+ *         description: Item not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
 router.post('/:itemId', protect, authorize('user'), async (req, res) => {
     try {
         const item = await Item.findById(req.params.itemId);
@@ -72,6 +135,54 @@ router.post('/:itemId', protect, authorize('user'), async (req, res) => {
     }
 });
 
+/**
+ * @swagger
+ * /api/claims:
+ *   get:
+ *     tags: [Claims]
+ *     summary: Get claims
+ *     description: Retrieve claims. Admins see all claims, regular users see only their own. Requires authentication.
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Claims retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 count:
+ *                   type: integer
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       _id:
+ *                         type: string
+ *                       item:
+ *                         $ref: '#/components/schemas/Item'
+ *                       claimedBy:
+ *                         type: object
+ *                         properties:
+ *                           _id:
+ *                             type: string
+ *                           name:
+ *                             type: string
+ *                           email:
+ *                             type: string
+ *                       proofDescription:
+ *                         type: string
+ *                       status:
+ *                         type: string
+ *                         enum: ["pending", "verified", "rejected"]
+ *                       createdAt:
+ *                         type: string
+ *                         format: date-time
+ */
 // @route   GET /api/claims
 // @desc    Get all claims (Admin sees all, User sees their own)
 // @access  Private
@@ -95,6 +206,65 @@ router.get('/', protect, async (req, res) => {
     }
 });
 
+/**
+ * @swagger
+ * /api/claims/{claimId}/verify:
+ *   put:
+ *     tags: [Claims]
+ *     summary: Verify a claim (Admin only)
+ *     description: Admin verifies, approves, rejects, or marks a claim as ready for pickup. Requires admin authentication.
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: claimId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Claim ID to verify
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - status
+ *             properties:
+ *               status:
+ *                 type: string
+ *                 enum: ["verified", "approved", "rejected", "ready_for_pickup"]
+ *                 description: New status for the claim
+ *               adminNote:
+ *                 type: string
+ *                 description: Admin's note or reason for decision
+ *     responses:
+ *       200:
+ *         description: Claim verified/updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     _id:
+ *                       type: string
+ *                     status:
+ *                       type: string
+ *                     reviewedAt:
+ *                       type: string
+ *                       format: date-time
+ *       404:
+ *         description: Claim not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
 // @route   PUT /api/claims/:claimId/verify
 // @desc    Verify a claim (Admin only)
 // @access  Private/Admin

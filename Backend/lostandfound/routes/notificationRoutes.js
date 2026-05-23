@@ -3,6 +3,30 @@ const router = express.Router();
 const Notification = require('../models/Notification');
 const { protect } = require('../middleware/auth');
 
+/**
+ * @swagger
+ * /api/notifications:
+ *   get:
+ *     tags: [Notifications]
+ *     summary: Get user notifications
+ *     description: Retrieve all notifications for the authenticated user, sorted by newest first. Requires authentication.
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Notifications retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Notification'
+ */
 // @route   GET /api/notifications
 // @desc    Get user notifications
 // @access  Private
@@ -19,6 +43,47 @@ router.get('/', protect, async (req, res) => {
     }
 });
 
+/**
+ * @swagger
+ * /api/notifications/{id}/read:
+ *   put:
+ *     tags: [Notifications]
+ *     summary: Mark a notification as read
+ *     description: Mark a specific notification as read. Requires authentication.
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Notification ID
+ *     responses:
+ *       200:
+ *         description: Notification marked as read
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   $ref: '#/components/schemas/Notification'
+ *       404:
+ *         description: Notification not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       401:
+ *         description: Not authorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
 // @route   PUT /api/notifications/:id/read
 // @desc    Mark notification as read
 // @access  Private
@@ -43,6 +108,26 @@ router.put('/:id/read', protect, async (req, res) => {
     }
 });
 
+/**
+ * @swagger
+ * /api/notifications/read-all:
+ *   put:
+ *     tags: [Notifications]
+ *     summary: Mark all notifications as read
+ *     description: Mark all unread notifications for the current user as read. Requires authentication.
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: All notifications marked as read
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ */
 // @route   PUT /api/notifications/read-all
 // @desc    Mark all notifications as read
 // @access  Private
