@@ -1,39 +1,62 @@
 const express = require('express');
 const router = express.Router();
-const mongoose = require('mongoose');
-const jwt = require('jsonwebtoken');
+const Notification = require('../models/Notification');
+const { protect } = require('../middleware/auth');
 
-const auth = (req, res, next) => {
-    const token = req.headers.authorization?.split(' ')[1];
-    if (!token) return res.json({ success: false, message: 'Authentication required' });
+// @route   GET /api/notifications
+// @desc    Get user notifications
+// @access  Private
+router.get('/', protect, async (req, res) => {
     try {
-        req.user = jwt.verify(token, process.env.JWT_SECRET || 'secret123');
-        next();
-    } catch (err) {
-        res.json({ success: false, message: 'Invalid token' });
+        const notifications = await Notification.find({ recipient: req.user.id })
+            .populate('item', 'name')
+            .sort('-createdAt')
+            .limit(50);
+
+        res.status(200).json({ success: true, data: notifications });
+    } catch (error) {
+        res.status(400).json({ success: false, message: error.message });
     }
-};
-
-router.get('/', auth, async (req, res) => {
-    try {
-        const notifications = await mongoose.connection.db.collection('notifications').find({ userId: req.user.id }).sort({ createdAt: -1 }).toArray();
-        const unreadCount = notifications.filter(n => !n.isRead).length;
-        res.json({ success: true, data: notifications, unreadCount });
-    } catch (err) { res.json({ success: false, message: err.message }); }
 });
 
-router.put('/:id/read', async (req, res) => {
+// @route   PUT /api/notifications/:id/read
+// @desc    Mark notification as read
+// @access  Private
+router.put('/:id/read', protect, async (req, res) => {
     try {
-        await mongoose.connection.db.collection('notifications').updateOne({ _id: new mongoose.Types.ObjectId(req.params.id) }, { $set: { isRead: true } });
-        res.json({ success: true });
-    } catch (err) { res.json({ success: false, message: err.message }); }
+        const notification = await Notification.findById(req.params.id);
+        
+        if (!notification) {
+            return res.status(404).json({ success: false, message: 'Notification not found' });
+        }
+
+        if (notification.recipient.toString() !== req.user.id) {
+            return res.status(401).json({ success: false, message: 'Not authorized' });
+        }
+
+        notification.read = true;
+        await notification.save();
+
+        res.status(200).json({ success: true, data: notification });
+    } catch (error) {
+        res.status(400).json({ success: false, message: error.message });
+    }
 });
 
-router.put('/read-all', auth, async (req, res) => {
+// @route   PUT /api/notifications/read-all
+// @desc    Mark all notifications as read
+// @access  Private
+router.put('/read-all', protect, async (req, res) => {
     try {
-        await mongoose.connection.db.collection('notifications').updateMany({ userId: req.user.id, isRead: false }, { $set: { isRead: true } });
-        res.json({ success: true });
-    } catch (err) { res.json({ success: false, message: err.message }); }
+        await Notification.updateMany(
+            { recipient: req.user.id, read: false },
+            { read: true }
+        );
+
+        res.status(200).json({ success: true, message: 'All notifications marked as read' });
+    } catch (error) {
+        res.status(400).json({ success: false, message: error.message });
+    }
 });
 
 module.exports = router;

@@ -25,6 +25,7 @@ app.use(cors({
     origin: [
         'http://localhost:3000',
         'http://localhost:3001',
+        'http://localhost:5173',
         'https://findera-frontend-app.vercel.app',
         'https://frontend-10pb8b4pm-group6ipt123-3824s-projects.vercel.app',
         'https://lostandfound-three-kohl.vercel.app',

@@ -4,7 +4,7 @@ const AuthContext = createContext(null);
 
 const API_URL = process.env.NODE_ENV === 'production' 
   ? 'https://lostandfound-three-kohl.vercel.app'  // Production URL
-  : 'http://localhost:5000';  // Local development
+  : 'http://localhost:3000';  // Local development
 
 export const useAuth = () => {
     const context = useContext(AuthContext);
