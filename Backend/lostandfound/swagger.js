@@ -1,5 +1,7 @@
 const swaggerJsdoc = require('swagger-jsdoc');
 
+const PORT = process.env.PORT || 5000;
+
 const options = {
     definition: {
         openapi: '3.0.0',
@@ -21,14 +23,9 @@ Features:
 - Status tracking
 
 Authentication:
-Most endpoints require a JWT token. Get your token by:
-1. Registering a new user at /api/auth/register
-2. Logging in at /api/auth/login
-3. Click the "Authorize" button and enter: Bearer YOUR_TOKEN_HERE
-
-Testing Accounts:
-- Admin: admin@findera.com / Admin@123
-- User: Register your own account
+1. Register at /api/auth/register
+2. Login at /api/auth/login
+3. Click "Authorize" and use: Bearer YOUR_TOKEN_HERE
             `,
             contact: {
                 name: 'FindEra Support',
@@ -39,19 +36,29 @@ Testing Accounts:
                 url: 'https://opensource.org/licenses/MIT'
             }
         },
+
+        // 🔥 IMPORTANT: Clean + environment-based servers
         servers: [
-            { url: 'http://localhost:5000/api', description: 'Local Development' },
-            { url: 'https://lostandfound-three-kohl.vercel.app/api', description: 'Production (Vercel)' }
+            {
+                url: `http://localhost:${PORT}`,
+                description: 'Local Development'
+            },
+            {
+                url: process.env.BASE_URL || 'https://your-render-app.onrender.com',
+                description: 'Production Server'
+            }
         ],
+
         components: {
             securitySchemes: {
                 bearerAuth: {
                     type: 'http',
                     scheme: 'bearer',
                     bearerFormat: 'JWT',
-                    description: 'Enter JWT token from login'
+                    description: 'Enter JWT token: Bearer <your_token>'
                 }
             },
+
             schemas: {
                 User: {
                     type: 'object',
@@ -65,6 +72,7 @@ Testing Accounts:
                         createdAt: { type: 'string', format: 'date-time' }
                     }
                 },
+
                 Item: {
                     type: 'object',
                     properties: {
@@ -76,14 +84,18 @@ Testing Accounts:
                         location: { type: 'string', example: 'Main Library' },
                         date: { type: 'string', format: 'date' },
                         image: { type: 'string' },
-                        status: { type: 'string', enum: ['pending', 'claimed', 'verified', 'ready_for_pickup', 'closed', 'expired'] },
+                        status: {
+                            type: 'string',
+                            enum: ['pending', 'claimed', 'verified', 'ready_for_pickup', 'closed', 'expired']
+                        },
                         userId: { type: 'string' },
                         userName: { type: 'string' },
-                        daysRemaining: { type: 'integer', description: 'Days until auto-expiration' },
+                        daysRemaining: { type: 'integer' },
                         expiryDate: { type: 'string', format: 'date-time' },
                         createdAt: { type: 'string', format: 'date-time' }
                     }
                 },
+
                 Message: {
                     type: 'object',
                     properties: {
@@ -96,18 +108,23 @@ Testing Accounts:
                         createdAt: { type: 'string', format: 'date-time' }
                     }
                 },
+
                 Notification: {
                     type: 'object',
                     properties: {
                         _id: { type: 'string' },
                         userId: { type: 'string' },
-                        type: { type: 'string', enum: ['new_message', 'potential_match', 'item_claimed'] },
+                        type: {
+                            type: 'string',
+                            enum: ['new_message', 'potential_match', 'item_claimed']
+                        },
                         title: { type: 'string' },
                         message: { type: 'string' },
                         isRead: { type: 'boolean' },
                         createdAt: { type: 'string', format: 'date-time' }
                     }
                 },
+
                 Error: {
                     type: 'object',
                     properties: {
@@ -117,7 +134,9 @@ Testing Accounts:
                 }
             }
         },
+
         security: [{ bearerAuth: [] }],
+
         tags: [
             { name: 'Auth', description: 'Authentication & registration' },
             { name: 'Items', description: 'Lost and found items' },
@@ -128,6 +147,7 @@ Testing Accounts:
             { name: 'Admin', description: 'Admin dashboard' }
         ]
     },
+
     apis: ['./routes/*.js']
 };
 

@@ -221,25 +221,41 @@ app.use((err, req, res, next) => {
     res.status(err.status || 500).json({ success: false, message: err.message || 'Internal server error' });
 });
 
-module.exports = app;
+// Start server - works in both development and production
+const server = app.listen(PORT, () => {
+    const environment = process.env.NODE_ENV || 'development';
+    const baseUrl = process.env.BASE_URL || `http://localhost:${PORT}`;
+    console.log(`\n========================================`);
+    console.log(`FindEra API Running`);
+    console.log(`Environment: ${environment}`);
+    console.log(`Port: ${PORT}`);
+    console.log(`Base URL: ${baseUrl}`);
+    console.log(`API Docs: ${baseUrl}/api-docs`);
+    console.log(`Health Check: ${baseUrl}/health`);
+    console.log(`========================================\n`);
+});
 
-if (process.env.NODE_ENV !== 'production') {
-    const server = app.listen(PORT, () => {
-        console.log(`\n========================================`);
-        console.log(`FindEra API Running`);
-        console.log(`Server: http://localhost:${PORT}`);
-        console.log(`Swagger: http://localhost:${PORT}/api-docs`);
-        console.log(`Health: http://localhost:${PORT}/health`);
-        console.log(`========================================\n`);
-    });
-    const gracefulShutdown = () => {
-        console.log('\nShutting down...');
-        server.close(async () => {
+// Graceful shutdown
+const gracefulShutdown = () => {
+    console.log('\nShutting down gracefully...');
+    server.close(async () => {
+        try {
             await mongoose.connection.close();
-            console.log('Server closed');
+            console.log('MongoDB connection closed');
             process.exit(0);
-        });
-    };
-    process.on('SIGTERM', gracefulShutdown);
-    process.on('SIGINT', gracefulShutdown);
-}
+        } catch (err) {
+            console.error('Error during shutdown:', err);
+            process.exit(1);
+        }
+    });
+    // Force shutdown after 30 seconds
+    setTimeout(() => {
+        console.error('Forced shutdown due to timeout');
+        process.exit(1);
+    }, 30000);
+};
+
+process.on('SIGTERM', gracefulShutdown);
+process.on('SIGINT', gracefulShutdown);
+
+module.exports = app;
