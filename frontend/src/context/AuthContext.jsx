@@ -4,7 +4,7 @@ const AuthContext = createContext(null);
 
 const API_URL = import.meta.env.VITE_API_URL || (
   import.meta.env.MODE === 'production' 
-  ? 'https://lostandfound-three-kohl.vercel.app'  // Production URL
+? 'https://lostandfound-ipt-1.onrender.com'  
   : 'http://localhost:5000'  // Local development
 );
 
