@@ -3,8 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
 import NotificationBell from './NotificationBell';
-
-/* eslint-disable react-hooks/exhaustive-deps */
+axios.defaults.baseURL = import.meta.env.VITE_API_URL || 'https://lostandfound-ipt-1.onrender.com';
 
 const styles = `
   @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700;800;900&display=swap');
