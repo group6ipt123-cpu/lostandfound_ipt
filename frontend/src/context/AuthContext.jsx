@@ -8,11 +8,17 @@ const API_URL = import.meta.env.VITE_API_URL || (
   : 'http://localhost:5000'  // Local development
 );
 
-export const useAuth = () => {
-    const context = useContext(AuthContext);
-    if (!context) throw new Error('useAuth must be used within AuthProvider');
-    return context;
-};
+useEffect(() => {
+    const token = localStorage.getItem('token');
+    const userData = localStorage.getItem('user');
+    if (token && userData) {
+        try { 
+            const parsed = JSON.parse(userData);
+            setUser({ ...parsed, id: parsed.id || parsed._id });
+        } catch (e) {}
+    }
+    setLoading(false);
+}, []);
 
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
