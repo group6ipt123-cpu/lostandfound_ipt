@@ -22,18 +22,13 @@ const userRoutes = require('./routes/userRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 
 app.use(cors({
-    origin: [
-        'http://localhost:3000',
-        'http://localhost:3001',
-        'http://localhost:5173',
-        'http://localhost:5174',
-        'https://findera-frontend-app.vercel.app',
-        'https://frontend-10pb8b4pm-group6ipt123-3824s-projects.vercel.app',
-        'https://lostandfound-three-kohl.vercel.app',
-        'https://findera-frontend-prhrunjzk-group6ipt123-3824s-projects.vercel.app',
-        'https://lostandfound-ipt-95l4.vercel.app',
-        'https://lostandfound-ipt-95l4-njg9hipr8-group6ipt123-3824s-projects.vercel.app'
-    ],
+    origin: function(origin, callback) {
+        if (!origin) return callback(null, true);
+        if (origin.match(/\.vercel\.app$/) || origin.includes('localhost')) {
+            return callback(null, true);
+        }
+        return callback(new Error('Not allowed by CORS'));
+    },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
