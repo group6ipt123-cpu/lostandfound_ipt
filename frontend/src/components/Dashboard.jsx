@@ -787,15 +787,12 @@ const Dashboard = ({ registerChatHandler }) => {
     if (registerChatHandler) registerChatHandler(openChatFromNotification);
   }, [registerChatHandler, openChatFromNotification]);
 
-  const fetchUser = async () => {
+const fetchUser = async () => {
     try {
-      const token = localStorage.getItem('token');
-      if (!token) return;
-      const response = await axios.get('/api/users/profile', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      if (response.data.success) {
-        setUser({ ...response.data.data, id: response.data.data.id || response.data.data._id });
+      const userData = localStorage.getItem('user');
+      if (userData) {
+        const parsed = JSON.parse(userData);
+        setUser({ ...parsed, id: parsed.id || parsed._id });
       }
     } catch (err) { console.error('Error fetching user:', err); }
   };
