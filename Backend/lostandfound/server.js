@@ -30,7 +30,9 @@ app.use(cors({
         'https://findera-frontend-app.vercel.app',
         'https://frontend-10pb8b4pm-group6ipt123-3824s-projects.vercel.app',
         'https://lostandfound-three-kohl.vercel.app',
-        'https://findera-frontend-prhrunjzk-group6ipt123-3824s-projects.vercel.app'
+        'https://findera-frontend-prhrunjzk-group6ipt123-3824s-projects.vercel.app',
+        'https://lostandfound-ipt-95l4.vercel.app',
+        'https://lostandfound-ipt-95l4-njg9hipr8-group6ipt123-3824s-projects.vercel.app'
     ],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
