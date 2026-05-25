@@ -4,21 +4,15 @@ const AuthContext = createContext(null);
 
 const API_URL = import.meta.env.VITE_API_URL || (
   import.meta.env.MODE === 'production' 
-? 'https://lostandfound-ipt-1.onrender.com'  
-  : 'http://localhost:5000'  // Local development
+    ? 'https://lostandfound-ipt-1.onrender.com'
+    : 'http://localhost:5000'
 );
 
-useEffect(() => {
-    const token = localStorage.getItem('token');
-    const userData = localStorage.getItem('user');
-    if (token && userData) {
-        try { 
-            const parsed = JSON.parse(userData);
-            setUser({ ...parsed, id: parsed.id || parsed._id });
-        } catch (e) {}
-    }
-    setLoading(false);
-}, []);
+export const useAuth = () => {
+    const context = useContext(AuthContext);
+    if (!context) throw new Error('useAuth must be used within AuthProvider');
+    return context;
+};
 
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
@@ -28,7 +22,10 @@ export const AuthProvider = ({ children }) => {
         const token = localStorage.getItem('token');
         const userData = localStorage.getItem('user');
         if (token && userData) {
-            try { setUser(JSON.parse(userData)); } catch (e) {}
+            try { 
+                const parsed = JSON.parse(userData);
+                setUser({ ...parsed, id: parsed.id || parsed._id });
+            } catch (e) {}
         }
         setLoading(false);
     }, []);
@@ -47,7 +44,7 @@ export const AuthProvider = ({ children }) => {
                 if (token && user) {
                     localStorage.setItem('token', token);
                     localStorage.setItem('user', JSON.stringify(user));
-                    setUser(user);
+                    setUser({ ...user, id: user.id || user._id });
                     return { success: true };
                 }
             }
